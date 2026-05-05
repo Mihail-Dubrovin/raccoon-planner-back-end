@@ -2,12 +2,15 @@ import { Injectable } from '@nestjs/common'
 import { hash } from 'argon2'
 import { AuthDto } from 'src/auth/dto/auth.dto'
 import { PrismaService } from 'src/prisma.service'
+import { TaskService } from 'src/task/task.service'
 import { UserDto } from './dto/user.dto'
-import { startOfDay, subDays } from 'date-fns'
 
 @Injectable()
 export class UserService {
-	constructor(private prisma: PrismaService) {}
+	constructor(
+		private prisma: PrismaService,
+		private taskService: TaskService
+	) {}
 
 	getById(id: string) {
 		return this.prisma.user.findUnique({
@@ -30,35 +33,10 @@ export class UserService {
 
 	async getProfile(id: string) {
 		const profile = await this.getById(id)
-
 		const totalTasks = profile.tasks.length
-		const complitedTasks = await this.prisma.task.count({
-			where: {
-				userId: id,
-				isComplited: true
-			}
-		})
 
-		const todayStart = startOfDay(new Date())
-		const weekStart = startOfDay(subDays(new Date(), 7))
-
-		const todayTasks = await this.prisma.task.count({
-			where: {
-				userId: id,
-				createdAt: {
-					gte: todayStart.toISOString()
-				}
-			}
-		})
-
-		const weekTasks = await this.prisma.task.count({
-			where: {
-				userId: id,
-				createdAt: {
-					gte: weekStart.toISOString()
-				}
-			}
-		})
+		const { completedTasks, todayTasks, weekTasks } =
+			await this.taskService.getStatistics(id)
 
 		const { password, ...rest } = profile
 
@@ -66,7 +44,7 @@ export class UserService {
 			user: rest,
 			statistics: [
 				{ label: 'Total', value: totalTasks },
-				{ label: 'Complited tasks', value: complitedTasks },
+				{ label: 'Completed tasks', value: completedTasks },
 				{ label: 'Today tasks', value: todayTasks },
 				{ label: 'Week tasks', value: weekTasks }
 			]

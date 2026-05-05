@@ -1,11 +1,9 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "generated/client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -31,7 +29,7 @@ model Task {
   updatedAt   DateTime  @map("updated_at")   @updatedAt
   name        String
   priority    Priority?
-  isComplited Boolean?  @map("is_complited") @default(false)
+  isCompleted Boolean?  @map("is_completed") @default(false)
   userId      String    @map("user_id")
   user        User      @relation(fields: [userId], references: [id])
 
@@ -56,7 +54,7 @@ model PomodoroSession {
   id          String                               @id @default(cuid())
   createdAt   DateTime        @map("created_at")   @default(now())
   updatedAt   DateTime        @map("updated_at")   @updatedAt
-  isComplited Boolean?        @map("is_complited") @default(false)
+  isCompleted Boolean?        @map("is_completed") @default(false)
   userId      String          @map("user_id")
   rounds      PomodoroRound[]
   user        User            @relation(fields: [userId], references: [id])
@@ -69,7 +67,7 @@ model PomodoroRound {
   createdAt         DateTime        @map("created_at")          @default(now())
   updatedAt         DateTime        @map("updated_at")          @updatedAt
   totalSeconds      Int             @map("total_seconds")
-  isComplited       Boolean?        @map("is_complited")        @default(false)
+  isCompleted       Boolean?        @map("is_completed")        @default(false)
   pomodoroSessionId String          @map("pomodoro_session_id")
   pomodoroSession   PomodoroSession @relation(fields: [pomodoroSessionId], references: [id], onDelete: Cascade)
 

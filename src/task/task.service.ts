@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { startOfDay, subDays } from 'date-fns'
 import { PrismaService } from 'src/prisma.service'
 import { TaskDto } from './dto/task.dto'
 
@@ -43,5 +44,24 @@ export class TaskService {
 				id: taskId
 			}
 		})
+	}
+
+	async getStatistics(userId: string) {
+		const completedTasks = await this.prisma.task.count({
+			where: { userId, isCompleted: true }
+		})
+
+		const todayStart = startOfDay(new Date())
+		const weekStart = startOfDay(subDays(new Date(), 7))
+
+		const todayTasks = await this.prisma.task.count({
+			where: { userId, createdAt: { gte: todayStart.toISOString() } }
+		})
+
+		const weekTasks = await this.prisma.task.count({
+			where: { userId, createdAt: { gte: weekStart.toISOString() } }
+		})
+
+		return { completedTasks, todayTasks, weekTasks }
 	}
 }
